@@ -1,0 +1,67 @@
+---
+title: "LR"
+author: "Natalia Łyś"
+date: "2024-01-02"
+output: html_document
+---
+```{r, echo=FALSE}
+library(dplyr)
+```
+
+```{r}
+# Wczytanie danych
+dane <- read.csv("housing_price_dataset.csv")
+dane_zamienione <- dane %>% 
+  mutate(Neighborhood = as.numeric(factor(Neighborhood)))
+dane_zamienione <- scale(dane_zamienione)
+
+```
+
+
+```{r}
+table(dane$Neighborhood)
+table(dane$Bedrooms)
+table(dane$Bathrooms)
+```
+
+
+```{r}
+# Podział danych na zbiór uczący i testowy
+dane_tr1 <- dane_zamienione[(1:nrow(dane)) %% 3 == 0, ] 
+dane_tr2 <- dane_zamienione[(2:nrow(dane)) %% 3 == 0, ] 
+dane_tr <- rbind(dane_tr1,dane_tr2)
+```
+
+
+```{r}
+dane_te <- dane_zamienione[(3:nrow(dane)) %% 3 == 0, ] 
+```
+
+
+```{r}
+# Budowa modelu regresji liniowej na danych uczących
+dane_tr <- as.data.frame(dane_tr)
+model <- lm(Price ~ YearBuilt + Neighborhood + Bathrooms + Bedrooms + SquareFeet, data = dane_tr) # Model regresji liniowej
+summary(model)
+summary(dane$Price)
+```
+
+```{r}
+dane_te <- as.data.frame(dane_te)
+# Sprawdzenie dopasowania modelu na danych testowych
+predictions <- predict(model, newdata = dane_te) # Prognozy na danych testowych
+
+results <- data.frame(Przewidziane = predictions, Prawdziwe = dane_te$Price)
+head(results)
+```
+
+
+
+```{r}
+rmse <- sqrt(mean((dane_te$Price - predictions)^2)) # Obliczenie błędu średniokwadratowego
+
+mse <- mean((dane_te$Price - predictions)^2)
+
+print(paste("Root Mean Squared Error (RMSE) na danych testowych:", rmse))
+print(paste("Mean Squared Error (MSE) na danych testowych:", mse))
+```
